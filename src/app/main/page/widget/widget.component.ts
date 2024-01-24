@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { WidgetAnimations } from './widget.animations';
 import { LongTermGoal } from '../../../core/store/long-term-goal/long-term-goal.model';
+// import { LongTermGoal } from '../../core/store/long-term-goal/long-term-goal.model';
 
 @Component({
   selector: 'app-widget',
@@ -13,12 +14,7 @@ export class WidgetComponent implements OnInit {
   // --------------- INPUTS AND OUTPUTS ------------------
 
   /** The long term goal. */
-  @Input() longTermGoal: LongTermGoal = {
-    __id: 'ltg',
-    __userId: 'test-user',
-    oneYear: 'Improve my grades',
-    fiveYear: 'Land a well paying job that I enjoy',
-  };
+  @Input() longTermGoal: LongTermGoal;
     
   /** Initiate edit of long term goals. */
   @Output() editGoals: EventEmitter<void> = new EventEmitter<void>();
@@ -28,6 +24,9 @@ export class WidgetComponent implements OnInit {
   // --------------- DATA BINDING ------------------------
 
   // --------------- EVENT BINDING -----------------------
+  edit() {
+    this.editGoals.emit()
+  }
 
   // --------------- HELPER FUNCTIONS AND OTHER ----------
 
