@@ -1,3 +1,5 @@
 <div class="page-container">
-  <app-widget></app-widget>
+  <app-widget [longTermGoal]="longTermGoal$ | async"
+    (editGoals)="openEditModal$.next()"></app-widget>
+  <!-- <app-widget></app-widget> -->
 </div>

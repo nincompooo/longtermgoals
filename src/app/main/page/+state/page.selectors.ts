@@ -19,23 +19,32 @@ export class PageSelectors {
   cleanup(cId: string) {
     this.slRx.release(cId);
   }
-  // /** Select the quarter data. */
-  // selectLongTermData(currentUser$: Observable<User>, cId: string): 
-  //   Observable<LongTermGoal> {
-  //     return (currentUser$).pipe(
-  //       switchMap((currentUser) => {
-  //         return this.slRx.selectLongTermGoals<LongTermGoal>([['__userId', '==', currentUser.__id]], cId).pipe(switchMap(goals => {
-  //           return goals;
-  //         }),
-  //         );
+
+  // selectQuarterData(quarterStartTime$: Observable<number>, currentUser$: Observable<User>, cId: string): Observable<QuarterData> {
+
+  //   return combineLatest(quarterStartTime$, currentUser$).pipe(
+  //     switchMap(([quarterStartTime, currentUser]) => {
+  //       return this.slRx.selectQuarter<QuarterData>(`${quarterStartTime}`, cId, (q) => ({
+  //         quarterGoals: this.slRx.selectQuarterGoals([
+  //           ['__userId', '==', currentUser.__id],
+  //           ['__quarterId', '==', q.__id],
+  //         ], cId).pipe(
+  //           map(goals => {
+  //             goals.sort((a, b) => a.order - b.order);
+  //             return goals;
+  //           }),
+  //         ),
+  //       }));
   //     }),
-  //   ),
+  //   );
   // }
 
   selectLongTermData(currentUser$: Observable<User>, cId: string): Observable<LongTermGoal>{
     return (currentUser$).pipe(
       switchMap((currentUser) =>{
-        return this.slRx.selectLongTermGoals<LongTermGoal>([['__userId', '==', currentUser.__id]], cId).pipe(switchMap(goals => {
+        return this.slRx.selectLongTermGoals<LongTermGoal>([['__userId', '==', currentUser.__id]], cId).pipe(
+          switchMap
+          (goals => {
           return goals;
         }),
         );

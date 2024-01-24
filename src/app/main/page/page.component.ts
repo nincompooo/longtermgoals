@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, Input, Output, EventEmitter, Inject } from '@angular/core';
 import { ParamMap, ActivatedRoute } from '@angular/router';
 import { Store, select } from '@ngrx/store';
 import * as fromStore from '../../core/store/app.reducer';
@@ -13,7 +13,7 @@ import { LoadData, Cleanup } from './+state/page.actions';
 import { RouterNavigate } from '../../core/store/app.actions';
 import { UpdateUser } from '../../core/store/user/user.actions';
 import { LongTermGoal } from '../../core/store/long-term-goal/long-term-goal.model';
-import { MatDialog, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { ModalComponent } from './modal/modal.component';
 import { UpdateLongTermGoal } from 'src/app/core/store/long-term-goal/long-term-goal.actions';
 
@@ -76,66 +76,39 @@ export class PageComponent implements OnInit {
     private selectors: PageSelectors,
     private store: Store<fromStore.State>,
     private db: FirebaseService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
   ) {
   }
 
   ngOnInit() { 
     // --------------- EVENT HANDLING ----------------------
     this.openEditModal$
-    .pipe(
-      withLatestFrom(this.longTermGoal$),
-      takeUntil(this.unsubscribe$)
-    )
-    .subscribe(([_, longTermGoal]) => {
-      this.dialogRef = this.dialog.open(ModalComponent, {
-        height: '366px',
-        width: '100%',
-        maxWidth: '500px',
-        data: {
-          longTermGoal: longTermGoal,
-          updateGoals: (
-            goals: (longtermgoal: LongTermGoal) => {
-              this.store.dispatch(
-                new UpdateLongTermGoal(
-                  longTermGoal.__id,
-                  {
-                    oneYear: longTermGoal.oneYear,
-                    fiveYear: longTermGoal.fiveYear
-                  },
-                  this.containerId
-                )
-              );
-              console.log(longTermGoal); 
+      .pipe(withLatestFrom(this.longTermGoal$), takeUntil(this.unsubscribe$))
+      .subscribe(([_, longTermGoal]) => {
+        const loading$ = new BehaviorSubject<boolean>(true);
+
+        this.dialogRef = this.dialog.open(ModalComponent, {
+          height: '366px',
+          width: '100%',
+          maxWidth: '500px',
+          data: {
+            longTermGoal: longTermGoal,
+            updateGoals: (goals: LongTermGoal) => {
+              this.saveGoals$.next({
+                goals: [longTermGoal.oneYear, longTermGoal.fiveYear],
+                loading$: loading$
+              });
+              console.log(longTermGoal);
             }
-          )
-        }
+          }
+        });
       });
-    });
 
-  
-
-    /** Handle save goals events. */
-    // this.saveGoals$
-    // .pipe(takeUntil(this.unsubscribe$))
-    // .subscribe(({ goals, loading$ }) => {
-    //   // Define the action sets we'd like to dispatch
-    //   const actionSets = goals.map((g, i) => {
-    //     return {
-    //       action: new UpdateQuarterGoal(
-    //         g.__id,
-    //         {
-    //           text: g.text,
-    //           order: i + 1,
-    //         },
-    //         this.containerId
-    //       ),
-    //       responseActionTypes: {
-    //         success: QuarterGoalActionTypes.UPDATE_SUCCESS,
-    //         failure: QuarterGoalActionTypes.UPDATE_FAIL,
-    //       },
-    //     };
-    //   });
+      this.saveGoals$.pipe(
+        takeUntil(this.unsubscribe$),
+      ).subscribe(({ goals, loading$ }) => {
+        this.dialogRef.close();
+      });
 
     // --------------- LOAD DATA ---------------------------
     // Once everything is set up, load the data for the role.
@@ -144,12 +117,9 @@ export class PageComponent implements OnInit {
       takeUntil(this.unsubscribe$),
     ).subscribe(([currentUser]) => {
       this.store.dispatch(
-        new LoadData({
-          currentUser,
-        }, this.containerId)
-      );
-    });
-
+        new LoadData({currentUser,}, this.containerId)
+            );
+          });
   }
 
   ngOnDestroy() {
